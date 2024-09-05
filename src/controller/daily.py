@@ -42,9 +42,9 @@ class DailyController:
                     index += 1
 
         except Exception as e:
-            await log_message('ERROR', 'logs/error.py', f'error in daily_main: {e}')
+            await log_message('ERROR', 'logs/error.log', f'error in daily_main: {e}')
         except KeyboardInterrupt:
-            await log_message('CRITICAL', 'logs/error.py', f'Process interupted by keyboard')
+            await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
         finally:
             await log_message('INFO', 'logs/info.log', 'Process complete, engine stopped')
             await browser.close()
@@ -79,9 +79,9 @@ class DailyController:
                 await self._get_detail_jobs(page, html_content, job, nama_perusahaan, gaji, provinsi, post_date)
                 index += 1
         except KeyboardInterrupt:
-            await log_message('CRITICAL', 'logs/error.py', f'Process interupted by keyboard')
+            await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
         except Exception as e:
-            await log_message('ERROR', 'logs/error.py', f'error in _click_container: {e}')
+            await log_message('ERROR', 'logs/error.log', f'error in _click_container: {e}')
 
 
 
@@ -108,19 +108,19 @@ class DailyController:
                     'Jam Kerja' : ' '.join(sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[1]/div[1]/div[2]/p[4]/text()').getall()),
                     'Dress Code' : sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[1]/div[1]/div[3]/p[2]/text()').get()
                 },
-                'tentang_perusahaan' : (sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[2]/p[2]/text()').get() or '').replace('\r','').replace('\n','').replace('\xa0',''),
+                'tentang_perusahaan' : (sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[2]/p[2]/text()').get() or '').replace('\r','').replace('\n','').replace('\xa0','').replace('\\',''),
                 'lokasi' : {
-                    'Kota' : (sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[2]/div[1]/div[1]/div/text()').get() or '').replace('\r','').replace('\n',''),
-                    'Alamat' : (sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[2]/div[1]/div[2]/div/text()').get() or '').replace('\r','').replace('\n','')
+                    'Kota' : (sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[2]/div[1]/div[1]/div/text()').get() or '').replace('\r','').replace('\n','').replace('\\',''),
+                    'Alamat' : (sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[2]/div[1]/div[2]/div/text()').get() or '').replace('\r','').replace('\n','').replace('\\','')
                 },
                 'visi_misi' : [text.strip().replace('\xa0', '').replace('\t', '').replace('\n', '') if text.strip() else '' for text in sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[3]/div/p//text()').getall()]
             }
             await new_page.close()
             return informasi_perusahaan
         except KeyboardInterrupt:
-            await log_message('CRITICAL', 'logs/error.py', f'Process interupted by keyboard')
+            await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
         except Exception as e:
-            await log_message('ERROR', 'logs/error.py', f'error in _get_detail_company: {e}')
+            await log_message('ERROR', 'logs/error.log', f'error in _get_detail_company: {e}')
 
 
 
@@ -128,8 +128,8 @@ class DailyController:
         try:
             sel = Selector(text=html_content)
 
-            dilihat_sebanyak = sel.xpath('/html/body/div[1]/div[2]/div[3]/div/div/div/div[2]/div[4]/div[1]/div[2]/div[4]/div[1]/div[2]/p/text()').get()
-            deskripsi = sel.xpath('/html/body/div[1]/div[2]/div[3]/div/div/div/div[2]/div[4]/div[1]/div[2]/div[4]/div[1]/div[3]/p/text()').get()
+            dilihat_sebanyak = sel.xpath('/html/body/div[1]/div[2]/div[3]/div/div/div/div[2]/div[4]/div[1]/div[2]/div[4]/div[1]/div[1]/p/text()').get()
+            deskripsi = sel.xpath('/html/body/div[1]/div[2]/div[3]/div/div/div/div[2]/div[4]/div[1]/div[2]/div[4]/div[1]/div[2]/p/text()').get()
             range_data = post_date.split(' ')[-1]
             informasi_perusahaan = await self._get_detail_company(page, nama_perusahaan)
             tag = ['https://karir.com', 'Lowongan', provinsi]
@@ -148,43 +148,42 @@ class DailyController:
                     'Remote/On-site' : sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[1]/div/div[1]/p[4]/text()').get(),
                     'Fungsi Pekerjaan' : sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[1]/div/div[2]/p[2]/text()').get(),
                     'Jenjang Karir' : sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[1]/div/div[3]/p[2]/text()').get(),
-                    'Job Deskripsi' : [text.strip().replace('\xa0', '').replace('\t', '').replace('\n', '')  for text in sel.xpath('//*[@id="menu-0"]/p[position()>3]//text() | //*[@id="menu-0"]/ul//text()').getall() if text.strip()]
+                    'Job Deskripsi' : [text.strip().replace('\xa0', '').replace('\t', '').replace('\n', '').replace('\\','')  for text in sel.xpath('//*[@id="menu-0"]/p[position()>3]//text() | //*[@id="menu-0"]/ul//text()').getall() if text.strip()]
                 },
                 'persyaratan': {
                     'Tingkat Pendidikan' : sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[2]/div/div[1]/p[2]/text()').get(),
                     'Jurusan Pendidikan' : sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[2]/div/div[2]/p[2]/text()').get(),
                     'Minimal Pengalaman' : sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[2]/div/div[3]/p[2]/text()').get(),
-                    'Deskripsi Persyaratan' : [ text.strip().replace('\xa0', '').replace('\t', '').replace('\n', '')  for text in sel.xpath('//*[@id="menu-1"]/p[position()>3]//text() | //*[@id="menu-1"]/ul//text()').getall() if text.strip()],
+                    'Deskripsi Persyaratan' : [ text.strip().replace('\xa0', '').replace('\t', '').replace('\n', '').replace('\\','')  for text in sel.xpath('//*[@id="menu-1"]/p[position()>3]//text() | //*[@id="menu-1"]/ul//text()').getall() if text.strip()],
                 },
                 'skill_yang_dibutuhkan' : sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[3]/div//text()').getall(),
                 'lokasi' : {
-                    'Kota' : (sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[4]/div/div[1]/p[2]/text()').get() or '').replace('\r','').replace('\n','').replace('\xa0',''),
-                    'Alamat' : (sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[4]/div/div[2]/p[2]/text()').get() or '').replace('\r','').replace('\n','').replace('\xa0','')
+                    'Kota' : (sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[4]/div/div[1]/p[2]/text()').get() or '').replace('\r','').replace('\n','').replace('\xa0','').replace('\\',''),
+                    'Alamat' : (sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[2]/div[5]/div/div[4]/div/div[2]/p[2]/text()').get() or '').replace('\r','').replace('\n','').replace('\xa0','').replace('\\','')
                 },
                 'detail_perusahaan' : informasi_perusahaan
             }
 
 
+            path_data_raw = self.topic
             filename = f"{job.replace(' ','_').lower()}_{nama_perusahaan.replace(' ','_').lower()}.json".replace('\\','').replace('/','')
+            save_json = SaveJson('https://karir.com/search-lowongan', job, nama_perusahaan, range_data, post_date, tag, data, path_data_raw)
+            data = save_json.mapping()
 
-            path_data_raw = [self.topic]
 
             #? save to json local
             if self.jsonsave == True:
                 try:
-                    save_json = SaveJson('https://karir.com/search-lowongan', job, nama_perusahaan, range_data, post_date, tag, data, path_data_raw)
                     await save_json.save_json_local(filename, provinsi.replace(' ','_').replace('.','').lower())
                     # await log_message('DEBUG', 'logs/debug.log', f"save {filename}")
                 except Exception as e:
-                    await log_message('ERROR', 'logs/error.py', f'error in _get_detail_jobs: {e}')
+                    await log_message('ERROR', 'logs/error.log', f'error in _get_detail_jobs: {e}')
 
             #? send to kafka
             if self.kafkasend == True:
-                self.producer.send(self.topic, data)
-
-            print(data)
+                await self.producer.send(self.topic, data)
 
         except Exception as e:
-            await log_message('CRITICAL', 'logs/error.py', f'error in _get_detail_jobs: {e}')
+            await log_message('CRITICAL', 'logs/error.log', f'error in _get_detail_jobs: {e}')
         except KeyboardInterrupt:
-            await log_message('CRITICAL', 'logs/error.py', f'Process interupted by keyboard')
+            await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
