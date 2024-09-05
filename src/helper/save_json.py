@@ -5,7 +5,7 @@ from datetime import datetime
 
 class SaveJson:
 
-    def __init__(self, response, title, sub_title, range_data, create_data, tags, data):
+    def __init__(self, response, title, sub_title, range_data, create_data, tags, data, path_data_raw):
         self.response = response
         self.title = title
         self.sub_title = sub_title
@@ -13,7 +13,7 @@ class SaveJson:
         self.create_data = create_data
         self.tags = tags
         self.data = data
-        # self.path_data_raw = path_data_raw
+        self.path_data_raw = path_data_raw
 
 
     async def save_json_local(self, filename, *folders):
@@ -40,7 +40,7 @@ class SaveJson:
             "desc": "",
             "category": 'Lowongan',
             "sub_category": "",
-            "path_data_raw": 'self.path_data_raw',
+            "path_data_raw": self.path_data_raw,
             "crawling_time": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             "crawling_time_epoch": int(datetime.now().timestamp()),
             "table_name": "",

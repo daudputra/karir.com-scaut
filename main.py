@@ -1,14 +1,25 @@
 from src.controller.daily import DailyController
+from src.helper.mylog import log_message
 
 import argparse
 import asyncio
 
 async def main(**kwargs):
-    await DailyController().daily_main('https://karir.com/search-lowongan', **kwargs)
+    try:
+        await DailyController(**kwargs).daily_main('https://karir.com/search-lowongan')
+    except KeyboardInterrupt:
+        await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
+    except asyncio.CancelledError:
+        await log_message('CRITICAL', 'logs/error.log', 'Task was cancelled')
 
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script untuk menjalankan Controller dengan argumen.")
-    parser.add_argument('--headless',  action='store_true', help="Running Chromium dengan mode headless")
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Script untuk menjalankan dengan argumen.")
+    parser.add_argument('--headless', action='store_true', help="Running Chromium dengan mode headless")
+    parser.add_argument('--json',  action='store_true', help="Save data as json")
+    parser.add_argument('--kafka', action="store_true", help="send data to kafka")
+
+    args = parser.parse_args()
+    kwargs = vars(args)
+    asyncio.run(main(**kwargs))
