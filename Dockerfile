@@ -1,10 +1,7 @@
 FROM python:3.11-slim
 
-WORKDIR /
-
-RUN ln -fs /usr/share/zoneinfo/Asia/Jakarta /etc/localtime \
-    && echo "Asia/Jakarta" > /etc/timezone \
-    && dpkg-reconfigure -f noninteractive tzdata
+ENV TZ=Asia/Jakarta
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 WORKDIR /app
 

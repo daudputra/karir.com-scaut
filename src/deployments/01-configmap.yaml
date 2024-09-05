@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-sc-geostrategic-karir-lowongan
+data:
+  config.ini: |
+      [log]
+      path = /tmp/log
+      sectionable = 0
+
+      [kafka]
+      bootstrap_servers = kafka01.research.ai,kafka02.research.ai,kafka03.research.ai
+      topic = data-knowledge-repo-general_4
