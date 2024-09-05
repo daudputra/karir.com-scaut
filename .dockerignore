@@ -1,0 +1,15 @@
+.git
+.gitignore
+.pytest_cache/
+__pycache__/
+
+*.venv
+*.venv.*
+venv.*
+venv 
+
+
+data
+get_state.py
+state.json
+logs
