@@ -4,7 +4,7 @@ metadata:
   name: sc-geostrategic-karir-lowongan
   namespace: sc-geostrategic
   labels:
-    app: smart-crawler
+    app: sc-geostrategic
     kind: sc-geostrategic-karir-lowongan
 spec:
   schedule: "0 7 * * *"
@@ -16,7 +16,7 @@ spec:
       template:
         metadata:
           labels:
-            app: smart-crawler
+            app: sc-geostrategic
             kind: sc-geostrategic-karir-lowongan
         spec:
           hostAliases:
@@ -35,11 +35,7 @@ spec:
                   name: config-karir-lowongan
           containers:
           - name: sc-geostrategic-karir-lowongan
-            image: 192.168.202.50/crawler/smart-crawler/karir_lowongan:1.0
+            image: 192.168.202.50/crawler/geostrategic/karir_lowongan:1.1
             imagePullPolicy: IfNotPresent
-            volumeMounts:
-              - name: config
-                mountPath: /app/config.ini
-                subPath: config.ini
             command: ["python", "main.py", "--headless", "--kafka"]
           restartPolicy: Never

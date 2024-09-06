@@ -1,12 +1,18 @@
 from src.controller.daily import DailyController
+from src.controller.main_controller import MainController
 from src.helper.mylog import log_message
 
 import argparse
 import asyncio
 
-async def main(**kwargs):
+async def main(daily=False, **kwargs):
     try:
-        await DailyController(**kwargs).daily_main('https://karir.com/search-lowongan')
+
+        if daily == True:
+            await DailyController(**kwargs).daily_main('https://karir.com/search-lowongan')
+        else:
+            await MainController(**kwargs).main('https://karir.com/search-lowongan')
+
     except KeyboardInterrupt:
         await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
     except asyncio.CancelledError:
@@ -19,6 +25,7 @@ if __name__ == "__main__":
     parser.add_argument('--headless', action='store_true', help="Running Chromium dengan mode headless")
     parser.add_argument('--json',  action='store_true', help="Save data as json")
     parser.add_argument('--kafka', action="store_true", help="send data to kafka")
+    parser.add_argument('--daily', action='store_true', help="get data by today date")
 
     args = parser.parse_args()
     kwargs = vars(args)

@@ -3,6 +3,7 @@ import argparse
 
 from src.helper.save_json import SaveJson
 from src.helper.mylog import log_message
+from src.helper.today_date import today
 from src.connection.kafka import Producer
 
 from playwright.async_api import async_playwright
@@ -39,7 +40,10 @@ class DailyController:
 
                     html_content = await page.content()
                     await self._click_container(page, html_content)
+                    if not await self._click_container(page, html_content):
+                        break
                     index += 1
+
 
         except Exception as e:
             await log_message('ERROR', 'logs/error.log', f'error in daily_main: {e}')
@@ -70,14 +74,16 @@ class DailyController:
                 provinsi = div.xpath('div[1]/div[2]/p[4]/text()').get()
                 post_date = div.xpath('div[3]/div[2]/p/text()').get()
 
+                if post_date == today():
+                    await page.locator(f'//html/body/div/div[2]/div[3]/div/div/div/div[1]/div[{index}]').click()
+                    await asyncio.sleep(3) 
 
-                await page.locator(f'//html/body/div/div[2]/div[3]/div/div/div/div[1]/div[{index}]').click()
-                await asyncio.sleep(3) 
-
-
-                html_content = await page.content()
-                await self._get_detail_jobs(page, html_content, job, nama_perusahaan, gaji, provinsi, post_date)
-                index += 1
+                    html_content = await page.content()
+                    await self._get_detail_jobs(page, html_content, job, nama_perusahaan, gaji, provinsi, post_date)
+                    index += 1
+                else:
+                    return False
+                
         except KeyboardInterrupt:
             await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
         except Exception as e:
