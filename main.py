@@ -13,8 +13,6 @@ async def main(daily=False, **kwargs):
         else:
             await MainController(**kwargs).main('https://karir.com/search-lowongan')
 
-    except KeyboardInterrupt:
-        await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
     except asyncio.CancelledError:
         await log_message('CRITICAL', 'logs/error.log', 'Task was cancelled')
 
@@ -26,6 +24,7 @@ if __name__ == "__main__":
     parser.add_argument('--json',  action='store_true', help="Save data as json")
     parser.add_argument('--kafka', action="store_true", help="send data to kafka")
     parser.add_argument('--daily', action='store_true', help="get data by today date")
+    parser.add_argument('-urutkan', type=str, choices=['terbaru', 'prioritas', 'paling populer', 'gaji tertinggi'], help="get daya by [terbaru, prioritas, paling populer, gaji tertinggi].")
 
     args = parser.parse_args()
     kwargs = vars(args)

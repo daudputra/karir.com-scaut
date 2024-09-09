@@ -18,6 +18,7 @@ class MainController:
         self.topic = "data-knowledge-repo-general_2"
         self.bootstrap_servers = ['kafka01.research.ai', 'kafka02.research.ai', 'kafka03.research.ai']
         self.producer = Producer(self.bootstrap_servers)
+        self.urutkan = kwargs.get('urutkan', None)
 
     async def main(self, url):
         try:
@@ -42,7 +43,7 @@ class MainController:
                     index += 1
 
         except Exception as e:
-            await log_message('ERROR', 'logs/error.log', f'error in daily_main: {e}')
+            await log_message('ERROR', 'logs/error.log', f'error in main: {e}')
         except KeyboardInterrupt:
             await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
         finally:
@@ -51,9 +52,12 @@ class MainController:
 
 
     async def _urutkan(self, page):
-        await page.locator('[data-testid="KeyboardArrowDownIcon"]').nth(4).click()
-        await page.locator('text="Terbaru"').click()
-        await asyncio.sleep(5)
+        if self.urutkan:
+            urutkan = self.urutkan.title()
+            await page.locator('[data-testid="KeyboardArrowDownIcon"]').nth(4).click()
+            await page.locator(f'text="{urutkan}"').first.click()
+            await asyncio.sleep(5)
+        else:pass
 
 
 
@@ -175,7 +179,7 @@ class MainController:
             if self.jsonsave == True:
                 try:
                     await save_json.save_json_local(filename, provinsi.replace(' ','_').replace('.','').lower())
-                    # await log_message('DEBUG', 'logs/debug.log', f"save {filename}")
+                    await log_message('DEBUG', 'logs/debug.log', f"save {filename}")
                 except Exception as e:
                     await log_message('ERROR', 'logs/error.log', f'error in _get_detail_jobs: {e}')
 
