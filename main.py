@@ -24,7 +24,8 @@ if __name__ == "__main__":
     parser.add_argument('--json',  action='store_true', help="Save data as json")
     parser.add_argument('--kafka', action="store_true", help="send data to kafka")
     parser.add_argument('--daily', action='store_true', help="get data by today date")
-    parser.add_argument('-urutkan', type=str, choices=['terbaru', 'prioritas', 'paling populer', 'gaji tertinggi'], help="get daya by [terbaru, prioritas, paling populer, gaji tertinggi].")
+    parser.add_argument('-urutkan', type=str, choices=['terbaru', 'prioritas', 'paling-populer', 'gaji-tertinggi'], help="get daya by [terbaru, prioritas, paling populer, gaji tertinggi].")
+    parser.add_argument('-count', type=int, help="how many data do you want to get?")
 
     args = parser.parse_args()
     kwargs = vars(args)

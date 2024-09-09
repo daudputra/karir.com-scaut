@@ -1,5 +1,5 @@
 import asyncio
-import argparse
+import sys
 
 from src.helper.save_json import SaveJson
 from src.helper.mylog import log_message
@@ -19,6 +19,12 @@ class MainController:
         self.bootstrap_servers = ['kafka01.research.ai', 'kafka02.research.ai', 'kafka03.research.ai']
         self.producer = Producer(self.bootstrap_servers)
         self.urutkan = kwargs.get('urutkan', None)
+        self.count = kwargs.get('count', None)
+
+        self.total_data = 0
+        self.nama_perusahaan = None
+        self.informasi_perusahaan = None
+
 
     async def main(self, url):
         try:
@@ -44,16 +50,15 @@ class MainController:
 
         except Exception as e:
             await log_message('ERROR', 'logs/error.log', f'error in main: {e}')
-        except KeyboardInterrupt:
-            await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
         finally:
             await log_message('INFO', 'logs/info.log', 'Process complete, engine stopped')
+            print(f'total data : {self.total_data}')
             await browser.close()
 
 
     async def _urutkan(self, page):
         if self.urutkan:
-            urutkan = self.urutkan.title()
+            urutkan = self.urutkan.title().replace('-',' ')
             await page.locator('[data-testid="KeyboardArrowDownIcon"]').nth(4).click()
             await page.locator(f'text="{urutkan}"').first.click()
             await asyncio.sleep(5)
@@ -68,6 +73,11 @@ class MainController:
             index = 2
             div_container = sel.xpath('/html/body/div/div[2]/div[3]/div/div/div/div[1]/div[position() != 1 and position() != last()]')
             for div in div_container:
+
+                #? stop engine when reached count
+                if self.count is not None and self.total_data >= self.count:
+                    sys.exit()
+
                 job = div.xpath('div[1]/div[2]/p[1]/text()').get().replace('\t', '')
                 nama_perusahaan = div.xpath('div[1]/div[2]/p[2]/text()').get()
                 gaji = div.xpath('div[1]/div[2]/p[3]/text()').get()
@@ -82,6 +92,7 @@ class MainController:
                 html_content = await page.content()
                 await self._get_detail_jobs(page, html_content, job, nama_perusahaan, gaji, provinsi, post_date)
                 index += 1
+
         except KeyboardInterrupt:
             await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
         except Exception as e:
@@ -120,6 +131,9 @@ class MainController:
                 'visi_misi' : [text.strip().replace('\xa0', '').replace('\t', '').replace('\n', '') if text.strip() else '' for text in sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[3]/div/p//text()').getall()]
             }
             await new_page.close()
+
+            self.nama_perusahaan = nama_perusahaan
+            self.informasi_perusahaan = informasi_perusahaan
             return informasi_perusahaan
         except KeyboardInterrupt:
             await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
@@ -135,7 +149,12 @@ class MainController:
             dilihat_sebanyak = sel.xpath('/html/body/div[1]/div[2]/div[3]/div/div/div/div[2]/div[4]/div[1]/div[2]/div[4]/div[1]/div[1]/p/text()').get()
             deskripsi = sel.xpath('/html/body/div[1]/div[2]/div[3]/div/div/div/div[2]/div[4]/div[1]/div[2]/div[4]/div[1]/div[2]/p/text()').get()
             range_data = post_date.split(' ')[-1]
-            informasi_perusahaan = await self._get_detail_company(page, nama_perusahaan)
+
+            if self.nama_perusahaan == nama_perusahaan:
+                informasi_perusahaan = self.informasi_perusahaan
+            else:
+                informasi_perusahaan = await self._get_detail_company(page, nama_perusahaan)
+
             tag = ['https://karir.com', 'Lowongan', provinsi]
 
 
@@ -179,13 +198,16 @@ class MainController:
             if self.jsonsave == True:
                 try:
                     await save_json.save_json_local(filename, provinsi.replace(' ','_').replace('.','').lower())
-                    await log_message('DEBUG', 'logs/debug.log', f"save {filename}")
+                    await log_message('INFO', 'logs/info_json.log', f"save {filename}")
                 except Exception as e:
                     await log_message('ERROR', 'logs/error.log', f'error in _get_detail_jobs: {e}')
 
             #? send to kafka
             if self.kafkasend == True:
                 await self.producer.send(self.topic, data)
+
+
+            self.total_data += 1
 
         except Exception as e:
             await log_message('CRITICAL', 'logs/error.log', f'error in _get_detail_jobs: {e}')

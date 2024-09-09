@@ -20,6 +20,9 @@ class DailyController:
         self.bootstrap_servers = ['kafka01.research.ai', 'kafka02.research.ai', 'kafka03.research.ai']
         self.producer = Producer(self.bootstrap_servers)
 
+        self.nama_perusahaan = None
+        self.informasi_perusahaan = None
+
     async def daily_main(self, url):
         try:
             async with async_playwright() as p:
@@ -122,6 +125,9 @@ class DailyController:
                 'visi_misi' : [text.strip().replace('\xa0', '').replace('\t', '').replace('\n', '') if text.strip() else '' for text in sel.xpath('/html/body/div[1]/div[2]/div[4]/div/div/div/div[2]/div[2]/div/div/div[3]/div/p//text()').getall()]
             }
             await new_page.close()
+
+            self.nama_perusahaan = nama_perusahaan
+            self.informasi_perusahaan = informasi_perusahaan
             return informasi_perusahaan
         except KeyboardInterrupt:
             await log_message('CRITICAL', 'logs/error.log', f'Process interupted by keyboard')
@@ -137,7 +143,12 @@ class DailyController:
             dilihat_sebanyak = sel.xpath('/html/body/div[1]/div[2]/div[3]/div/div/div/div[2]/div[4]/div[1]/div[2]/div[4]/div[1]/div[1]/p/text()').get()
             deskripsi = sel.xpath('/html/body/div[1]/div[2]/div[3]/div/div/div/div[2]/div[4]/div[1]/div[2]/div[4]/div[1]/div[2]/p/text()').get()
             range_data = post_date.split(' ')[-1]
-            informasi_perusahaan = await self._get_detail_company(page, nama_perusahaan)
+
+            if self.nama_perusahaan == nama_perusahaan:
+                informasi_perusahaan = self.informasi_perusahaan
+            else:
+                informasi_perusahaan = await self._get_detail_company(page, nama_perusahaan)
+
             tag = ['https://karir.com', 'Lowongan', provinsi]
 
 
@@ -181,7 +192,7 @@ class DailyController:
             if self.jsonsave == True:
                 try:
                     await save_json.save_json_local(filename, provinsi.replace(' ','_').replace('.','').lower())
-                    # await log_message('DEBUG', 'logs/debug.log', f"save {filename}")
+                    await log_message('INFO', 'logs/info_json.log', f"save {filename}")
                 except Exception as e:
                     await log_message('ERROR', 'logs/error.log', f'error in _get_detail_jobs: {e}')
 
